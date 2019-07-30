@@ -49,7 +49,7 @@ class Retrieval():
 
     def filter_data(self):
         filter_list = []
-        filter_list.append(self.summary_df['overall_spaersity'] < self.sparsity_th)
+        filter_list.append(self.summary_df['overall_sparsity'] < self.sparsity_th)
         filter_list.append(self.summary_df['overall_quality'] > self.quality_th)
         filter_list.append(self.summary_df['time_sample'] == self.day_samples)
         df_filter = pd.DataFrame(data=filter_list).T
@@ -57,7 +57,7 @@ class Retrieval():
         return filtered_indexes
 
     def data_retrieval(self):
-        df_meta_data = pd.DataFrame(columns=['site_ID', 'sensor_ID', 'start_timestamp', 'end_timestamp', 'duration_days', 'time_sample', 'quantile_95', 'overall_spaersity', "overall_quality", "days_selected"])
+        df_meta_data = pd.DataFrame(columns=['site_ID', 'sensor_ID', 'start_timestamp', 'end_timestamp', 'duration_days', 'time_sample', 'quantile_95', 'overall_sparsity', "overall_quality", "days_selected"])
         summary_file_filtered = self.summary_df[self.filter_data()]
         all_sites = summary_file_filtered.site_ID.unique()
         site_IDs_selected = np.random.choice(all_sites, self.number_of_sites)
