@@ -49,25 +49,17 @@ class Retrieval():
         self.summary_df = get_summary_file()
 
     def add_site_filter(self, filter_expression):
-        #filter_list = []
         self.filter_list.append(filter_expression)
-        #
         return self.filter_list
 
-    # def construct_standard_site_filters(self)
-    #     add_site_filter
-
-    # def filter_data(self):
-    #     filter_list = []
-    #     filter_list.append(self.summary_df['overall_sparsity'] < self.sparsity_th)
-    #     filter_list.append(self.summary_df['overall_quality'] > self.quality_th)
-    #     filter_list.append(self.summary_df['time_sample'] == self.day_samples)
-    #     df_filter = pd.DataFrame(data=filter_list).T
-    #     filtered_indexes = np.alltrue(df_filter, axis=1)
-    #     return filtered_indexes
+    def construct_standard_site_filters(self):
+        self.add_site_filter(self.summary_df['overall_sparsity'] <0.3)
+        self.add_site_filter(self.summary_df['overall_quality'] >0.7)
+        self.add_site_filter(self.summary_df['time_sample'] ==288)
 
     def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
         df_filter = pd.DataFrame(data=self.filter_list).T
+        print(df_filter)
         filtered_indexes = np.alltrue(df_filter, axis=1)
         df_meta_data = pd.DataFrame(columns=['site_ID', 'sensor_ID', 'start_timestamp', 'end_timestamp', 'duration_days', 'time_sample', 'quantile_95', 'overall_sparsity', "overall_quality", "days_selected"])
         summary_file_filtered = self.summary_df[filtered_indexes]
