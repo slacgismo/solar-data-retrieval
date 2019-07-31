@@ -12,6 +12,7 @@ import numpy as np
 import sys
 from sys import path
 path.append('..')
+from functools import partial
 
 def get_summary_file():
     """
@@ -32,20 +33,16 @@ class Retrieval():
     Parameters
     ----------
     Data sampling: number_of_sites, number_of_days, quantile_percent
-    Filter thresholds: sparsity_th, quality_th, day_samples
 
     Returns
     ----------
     Random selection of sites and days per site, uploaded data on AWS S3 Bucket.
     """
-    def __init__(self, sparsity_th, quality_th, day_samples):
+    def __init__(self):
         self.number_of_sites = None
         self.number_of_days = None
         self.quantile_percent = None
         self.filter_list = []
-        self.sparsity_th = sparsity_th
-        self.quality_th = quality_th
-        self.day_samples = day_samples
         self.summary_df = get_summary_file()
 
     def add_site_filter(self, filter_expression):
@@ -56,6 +53,9 @@ class Retrieval():
         self.add_site_filter(self.summary_df['overall_sparsity'] <0.3)
         self.add_site_filter(self.summary_df['overall_quality'] >0.7)
         self.add_site_filter(self.summary_df['time_sample'] ==288)
+
+    def add_daily_filter(self, ):
+
 
     def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
         df_filter = pd.DataFrame(data=self.filter_list).T
