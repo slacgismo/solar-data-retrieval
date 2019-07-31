@@ -38,10 +38,10 @@ class Retrieval():
     ----------
     Random selection of sites and days per site, uploaded data on AWS S3 Bucket.
     """
-    def __init__(self, number_of_sites, number_of_days, quantile_percent, sparsity_th, quality_th, day_samples):
-        self.number_of_sites = number_of_sites
-        self.number_of_days = number_of_days
-        self.quantile_percent = quantile_percent
+    def __init__(self, sparsity_th, quality_th, day_samples):
+        self.number_of_sites = None
+        self.number_of_days = None
+        self.quantile_percent = None
         self.sparsity_th = sparsity_th
         self.quality_th = quality_th
         self.day_samples = day_samples
@@ -56,11 +56,11 @@ class Retrieval():
         filtered_indexes = np.alltrue(df_filter, axis=1)
         return filtered_indexes
 
-    def data_retrieval(self):
+    def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
         df_meta_data = pd.DataFrame(columns=['site_ID', 'sensor_ID', 'start_timestamp', 'end_timestamp', 'duration_days', 'time_sample', 'quantile_95', 'overall_sparsity', "overall_quality", "days_selected"])
         summary_file_filtered = self.summary_df[self.filter_data()]
         all_sites = summary_file_filtered.site_ID.unique()
-        site_IDs_selected = np.random.choice(all_sites, self.number_of_sites)
+        site_IDs_selected = np.random.choice(all_sites, number_of_sites)
         index_to_download = [] #from original summary file!
         sensor_IDs_selected = []
         for site_id in site_IDs_selected:
@@ -79,8 +79,8 @@ class Retrieval():
             valid_indices = filter_for_sparsity(power_signals_1, solver='MOSEK')
             day_numbers = np.arange(power_signals_1.shape[1])
             good_day_numbers = day_numbers[valid_indices]
-            list_of_selected_dates = np.random.choice(good_day_numbers, size=self.number_of_days, replace=False)
-            power_signals = (power_signals_1 / np.quantile(power_signals_1, self.quantile_percent))
+            list_of_selected_dates = np.random.choice(good_day_numbers, size=number_of_days, replace=False)
+            power_signals = (power_signals_1 / np.quantile(power_signals_1, quantile_percent))
             power_signals_selected_days = power_signals[:,list_of_selected_dates]
             if data_index == index_to_download[0]:
                 power_signals_selected_days_all = power_signals_selected_days
@@ -95,10 +95,10 @@ class Retrieval():
         df_data_input = pd.DataFrame(data=power_signals_selected_days_all[:])
         return df_data_input, df_meta_data
 
-    def data_upload(self):
-        df_data_input, df_meta_data = self.data_retrieval()
-        upload_data = utilities.AWS_upload(df_data_input,self.number_of_sites, self.number_of_days, "data_input")
-        upload_quantile_values = utilities.AWS_upload(df_meta_data,self.number_of_sites, self.number_of_days, "metadata")
+    def data_upload(self, number_of_sites, number_of_days, quantile_percent):
+        df_data_input, df_meta_data = self.data_retrieval(number_of_sites, number_of_days, quantile_percent)
+        upload_data = utilities.AWS_upload(df_data_input,number_of_sites, number_of_days, "data_input")
+        upload_quantile_values = utilities.AWS_upload(df_meta_data,number_of_sites, number_of_days, "metadata")
 
 if __name__ == "__main__":
     main()
