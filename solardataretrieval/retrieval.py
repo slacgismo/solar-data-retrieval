@@ -6,6 +6,7 @@ Preprocess of data took place in advance of this file.
 from solardataretrieval import utilities
 import boto3
 from solardatatools.clear_day_detection import filter_for_sparsity
+from solardatatools import find_clear_days
 from io import BytesIO
 import pandas as pd
 import numpy as np
@@ -42,25 +43,26 @@ class Retrieval():
         self.number_of_sites = None
         self.number_of_days = None
         self.quantile_percent = None
-        self.filter_list = []
+        self.site_filter_list = []
+        self.daily_filter_list = []
         self.summary_df = get_summary_file()
 
-    def add_site_filter(self, filter_expression):
-        self.filter_list.append(filter_expression)
-        return self.filter_list
+    def add_site_filter(self, site_filter_expression):
+        self.site_filter_list.append(site_filter_expression)
+        return self.site_filter_list
 
     def construct_standard_site_filters(self):
         self.add_site_filter(self.summary_df['overall_sparsity'] <0.3)
         self.add_site_filter(self.summary_df['overall_quality'] >0.7)
         self.add_site_filter(self.summary_df['time_sample'] ==288)
 
-    def add_daily_filter(self, ):
-
+    def add_daily_filter(self, daily_filter):
+        self.daily_filter_list.append(daily_filter)
+        return self.daily_filter_list
 
     def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
-        df_filter = pd.DataFrame(data=self.filter_list).T
-        print(df_filter)
-        filtered_indexes = np.alltrue(df_filter, axis=1)
+        df_site_filter = pd.DataFrame(data=self.site_filter_list).T
+        filtered_indexes = np.alltrue(df_site_filter, axis=1)
         df_meta_data = pd.DataFrame(columns=['site_ID', 'sensor_ID', 'start_timestamp', 'end_timestamp', 'duration_days', 'time_sample', 'quantile_95', 'overall_sparsity', "overall_quality", "days_selected"])
         summary_file_filtered = self.summary_df[filtered_indexes]
         all_sites = summary_file_filtered.site_ID.unique()
@@ -80,7 +82,10 @@ class Retrieval():
             response = s3.get_object(Bucket='pv.insight.sunpower.preprocessed', Key='matrices/{0:04d}.npy'.format(data_index))
             body = response['Body'].read()
             power_signals_1 = np.load(BytesIO(body))
-            valid_indices = filter_for_sparsity(power_signals_1, solver='MOSEK')
+            day_numbers = np.arange(power_signals_1.shape[1])
+            temp = [f(power_signals_1) for f in self.daily_filter_list]
+            df_daily_filter = pd.DataFrame(data=temp).T
+            valid_indices = np.alltrue(df_daily_filter, axis=1)
             day_numbers = np.arange(power_signals_1.shape[1])
             good_day_numbers = day_numbers[valid_indices]
             list_of_selected_dates = np.random.choice(good_day_numbers, size=number_of_days, replace=False)
@@ -97,7 +102,7 @@ class Retrieval():
             utilities.progress(counter, total, status='', bar_length=60)
             counter = counter + 1
         df_data_input = pd.DataFrame(data=power_signals_selected_days_all[:])
-        return df_data_input, df_meta_data, df_filter
+        return df_data_input, df_meta_data
 
     def data_upload(self, number_of_sites, number_of_days, quantile_percent):
         df_data_input, df_meta_data = self.data_retrieval(number_of_sites, number_of_days, quantile_percent)
