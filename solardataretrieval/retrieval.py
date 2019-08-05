@@ -55,6 +55,10 @@ class Retrieval():
         self.daily_filter_list.append(daily_filter)
         return
 
+    def construct_standard_daily_filters(self):
+        # TODO: write this function
+        pass
+
     def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
         df_site_filter = pd.DataFrame(data=self.site_filter_list).T
         filtered_indexes = np.alltrue(df_site_filter, axis=1)
