@@ -5,14 +5,9 @@ Preprocess of data took place in advance of this file.
 """
 from solardataretrieval import utilities
 import boto3
-from solardatatools.clear_day_detection import filter_for_sparsity
-from solardatatools import find_clear_days
 from io import BytesIO
 import pandas as pd
 import numpy as np
-import sys
-from sys import path
-path.append('..')
 from functools import partial
 
 def get_summary_file():
@@ -82,7 +77,6 @@ class Retrieval():
             response = s3.get_object(Bucket='pv.insight.sunpower.preprocessed', Key='matrices/{0:04d}.npy'.format(data_index))
             body = response['Body'].read()
             power_signals_1 = np.load(BytesIO(body))
-            day_numbers = np.arange(power_signals_1.shape[1])
             temp = [f(power_signals_1) for f in self.daily_filter_list]
             df_daily_filter = pd.DataFrame(data=temp).T
             valid_indices = np.alltrue(df_daily_filter, axis=1)
