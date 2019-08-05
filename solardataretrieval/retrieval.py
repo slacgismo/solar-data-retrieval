@@ -103,9 +103,18 @@ class Retrieval():
         return df_data_input, df_meta_data
 
     def data_upload(self, number_of_sites, number_of_days, quantile_percent):
-        df_data_input, df_meta_data = self.data_retrieval(number_of_sites, number_of_days, quantile_percent)
-        upload_data = utilities.AWS_upload(df_data_input,number_of_sites, number_of_days, "data_input")
-        upload_quantile_values = utilities.AWS_upload(df_meta_data,number_of_sites, number_of_days, "metadata")
+        df_data_input, df_meta_data = self.data_retrieval(number_of_sites,
+                                                          number_of_days,
+                                                          quantile_percent)
+        upload_data = utilities.AWS_upload(df_data_input,
+                                           number_of_sites,
+                                           number_of_days,
+                                           "data_input")
+        upload_quantile_values = utilities.AWS_upload(df_meta_data,
+                                                      number_of_sites,
+                                                      number_of_days,
+                                                      "metadata")
+        return
 
 if __name__ == "__main__":
     main()
