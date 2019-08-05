@@ -9,6 +9,8 @@ from io import BytesIO
 import pandas as pd
 import numpy as np
 from functools import partial
+from solardatatools.clear_day_detection import filter_for_sparsity
+
 
 def get_summary_file():
     """
@@ -42,7 +44,8 @@ class Retrieval():
         self.daily_filter_list = []
         self.summary_df = get_summary_file()
 
-    def add_site_filter(self, site_filter_expression):
+    def add_site_filter(self, site_filter_expression, daily_time_sample=288):
+        self.site_filter_list.append(self.summary_df['time_sample'] == daily_time_sample)
         self.site_filter_list.append(site_filter_expression)
         return
 
@@ -50,14 +53,16 @@ class Retrieval():
         self.add_site_filter(self.summary_df['overall_sparsity'] <0.3)
         self.add_site_filter(self.summary_df['overall_quality'] >0.7)
         self.add_site_filter(self.summary_df['time_sample'] ==288)
+        return
 
     def add_daily_filter(self, daily_filter):
         self.daily_filter_list.append(daily_filter)
         return
 
     def construct_standard_daily_filters(self):
-        # TODO: write this function
-        pass
+        sparcity_filter = partial(filter_for_sparsity, solver='MOSEK')
+        self.add_daily_filter(sparcity_filter)
+        return
 
     def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
         df_site_filter = pd.DataFrame(data=self.site_filter_list).T
