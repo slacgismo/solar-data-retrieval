@@ -44,7 +44,7 @@ class Retrieval():
 
     def add_site_filter(self, site_filter_expression):
         self.site_filter_list.append(site_filter_expression)
-        return self.site_filter_list
+        return
 
     def construct_standard_site_filters(self):
         self.add_site_filter(self.summary_df['overall_sparsity'] <0.3)
@@ -53,7 +53,7 @@ class Retrieval():
 
     def add_daily_filter(self, daily_filter):
         self.daily_filter_list.append(daily_filter)
-        return self.daily_filter_list
+        return
 
     def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
         df_site_filter = pd.DataFrame(data=self.site_filter_list).T
