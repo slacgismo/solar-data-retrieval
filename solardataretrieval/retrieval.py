@@ -77,11 +77,15 @@ class Retrieval():
             response = s3.get_object(Bucket='pv.insight.sunpower.preprocessed', Key='matrices/{0:04d}.npy'.format(data_index))
             body = response['Body'].read()
             power_signals_1 = np.load(BytesIO(body))
-            temp = [f(power_signals_1) for f in self.daily_filter_list]
-            df_daily_filter = pd.DataFrame(data=temp).T
-            valid_indices = np.alltrue(df_daily_filter, axis=1)
+            # Applying Daily Filters
             day_numbers = np.arange(power_signals_1.shape[1])
-            good_day_numbers = day_numbers[valid_indices]
+            if len(self.daily_filter_list) > 0:
+                temp = [f(power_signals_1) for f in self.daily_filter_list]
+                df_daily_filter = pd.DataFrame(data=temp).T
+                valid_indices = np.alltrue(df_daily_filter, axis=1)
+                good_day_numbers = day_numbers[valid_indices]
+            else:
+                good_day_numbers = day_numbers
             list_of_selected_dates = np.random.choice(good_day_numbers, size=number_of_days, replace=False)
             power_signals = (power_signals_1 / np.quantile(power_signals_1, quantile_percent))
             power_signals_selected_days = power_signals[:,list_of_selected_dates]
