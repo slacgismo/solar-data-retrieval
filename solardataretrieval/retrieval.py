@@ -64,7 +64,7 @@ class Retrieval():
         self.add_daily_filter(sparcity_filter)
         return
 
-    def data_retrieval(self, number_of_sites, number_of_days, quantile_percent):
+    def data_retrieval(self, number_of_sites, number_of_days, quantile_percent=0.95):
         df_site_filter = pd.DataFrame(data=self.site_filter_list).T
         filtered_indexes = np.alltrue(df_site_filter, axis=1)
         df_meta_data = pd.DataFrame(columns=['site_ID', 'sensor_ID', 'start_timestamp', 'end_timestamp', 'duration_days', 'time_sample', 'quantile_95', 'overall_sparsity', "overall_quality", "days_selected"])
